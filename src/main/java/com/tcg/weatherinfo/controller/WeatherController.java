@@ -1,5 +1,6 @@
 package com.tcg.weatherinfo.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -38,9 +39,18 @@ public class WeatherController {
 	}
 
 	@Operation(summary = "Get weather history", description = "Retrieves weather history for a given postal code")
-	@GetMapping("/history/{postalCode}")
+	@GetMapping("/history/{postalCode}/{username}")
 	public ResponseEntity<List<WeatherResponseDTO>> getWeatherHistory(@PathVariable String postalCode,
 			@PathVariable String username) {
+		List<WeatherResponseDTO> history = weatherService.getWeatherHistory(postalCode, username);
+		return ResponseEntity.ok(history);
+	}
+
+	@Operation(summary = "Get weather history", description = "Retrieves weather history for a given postal code")
+	@GetMapping("/history/{postalCode}")
+	public ResponseEntity<List<WeatherResponseDTO>> getWeatherHistoryNew(@PathVariable String postalCode,
+			Principal principal) {
+		String username = principal.getName();
 		List<WeatherResponseDTO> history = weatherService.getWeatherHistory(postalCode, username);
 		return ResponseEntity.ok(history);
 	}

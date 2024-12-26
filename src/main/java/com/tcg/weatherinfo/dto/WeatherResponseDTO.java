@@ -18,8 +18,8 @@ public class WeatherResponseDTO {
     private String weatherCondition;
     private LocalDateTime timestamp;
     private String username;
-	public WeatherResponseDTO(String postalCode, double temperature) {
-		this.postalCode = postalCode;
+	public WeatherResponseDTO(String weatherCondition, double temperature) {
+		this.weatherCondition = weatherCondition;
 		this.temperature = temperature;
 	}
     

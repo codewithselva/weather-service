@@ -11,9 +11,9 @@ import java.util.List;
 
 @Configuration
 public class OpenAPIConfig {
-    
+
     @Bean
-    public OpenAPI weatherServiceOpenAPI() {
+    OpenAPI weatherServiceOpenAPI() {
         Server localServer = new Server()
             .url("http://localhost:8080")
             .description("Local Development Server");

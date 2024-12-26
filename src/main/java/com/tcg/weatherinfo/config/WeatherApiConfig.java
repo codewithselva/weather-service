@@ -9,12 +9,10 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class WeatherApiConfig {
-    
-    @Bean
-    public RestTemplate weatherApiRestTemplate(WeatherApiProperties properties) {
-        return new RestTemplateBuilder()
-            .setConnectTimeout(Duration.ofMillis(properties.getConnectTimeout()))
-            .setReadTimeout(Duration.ofMillis(properties.getReadTimeout()))
-            .build();
-    }
+
+	@Bean
+	RestTemplate weatherApiRestTemplate(RestTemplateBuilder builder, WeatherApiProperties properties) {
+		return builder.connectTimeout(Duration.ofMillis(properties.getConnectTimeout()))
+				.readTimeout(Duration.ofMillis(properties.getReadTimeout())).build();
+	}
 }

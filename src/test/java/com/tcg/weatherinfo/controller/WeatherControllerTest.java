@@ -37,7 +37,6 @@ class WeatherControllerTest {
 	@InjectMocks
 	private WeatherController weatherController;
 
-
 	private MockMvc mockMvc;
 	// private UserDetails userDetails;
 
@@ -70,8 +69,8 @@ class WeatherControllerTest {
 
 		// When & Then
 		mockMvc.perform(post("/api/v1/weather/current").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"postalCode\":\"94040\"}")).andExpect(status().isOk())
-				.andExpect(jsonPath("$.weather").value("Sunny")).andExpect(jsonPath("$.temperature").value(75.0));
+				.content("{\"postalCode\":\"94040\", \"username\":\"testuser\"}")).andExpect(status().isOk())
+				.andExpect(jsonPath("$.weatherCondition").value("Sunny")).andExpect(jsonPath("$.temperature").value(75.0));
 
 		// Verify the service method was called
 		verify(weatherService, times(1)).getWeatherData("94040", "testuser");
@@ -87,8 +86,8 @@ class WeatherControllerTest {
 		when(weatherService.getWeatherHistory("94040", "testuser")).thenReturn(history);
 
 		// When & Then
-		mockMvc.perform(get("/api/v1/weather/history/94040").principal(() -> "testuser")).andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].weather").value("Sunny")).andExpect(jsonPath("$[1].weather").value("Cloudy"))
+		mockMvc.perform(get("/api/v1/weather/history/94040/testuser")).andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].weatherCondition").value("Sunny")).andExpect(jsonPath("$[1].weatherCondition").value("Cloudy"))
 				.andExpect(jsonPath("$[0].temperature").value(75.0))
 				.andExpect(jsonPath("$[1].temperature").value(70.0));
 

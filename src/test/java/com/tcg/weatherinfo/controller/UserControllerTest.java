@@ -11,10 +11,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -31,17 +31,17 @@ class UserControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 
-	@MockBean
+	@Mock
 	private UserService userService;
 
 	@Test
 	void testCreateUser() throws Exception {
-
+		// Given
 		User user = User.builder().id(1L) // If needed, for existing entities
 				.username("testuser").password("encodedpassword").active(true).build();
 
 		when(userService.createUser(Mockito.any(UserDTO.class))).thenReturn(user);
-
+		// When & Then
 		mockMvc.perform(post("/api/v1/users").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"username\": \"testuser\", \"password\": \"password\"}")).andExpect(status().isCreated())
 				.andExpect(jsonPath("$.username", is("testuser")));

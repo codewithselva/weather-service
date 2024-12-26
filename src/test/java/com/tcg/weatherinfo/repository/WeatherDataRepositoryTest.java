@@ -12,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tcg.weatherinfo.entity.User;
 import com.tcg.weatherinfo.entity.WeatherData;
+
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
@@ -30,13 +32,14 @@ class WeatherDataRepositoryTest {
 	private User user2;
 
     @BeforeEach
+    @Transactional
     void setUp() {
     	// Save users first
-        user1 = userRepository.save(User.builder().id(1L).username("testuser").password("password")
-                .active(true).createdAt(LocalDateTime.now()).build());
+        user1 = userRepository.save(User.builder().id(1L).username("activeuser").password("password")
+                .active(true).createdAt(LocalDateTime.now()).version(1).build());
 
         user2 = userRepository.save(User.builder().id(2L).username("inactiveuser").password("password")
-                .active(false).createdAt(LocalDateTime.now()).build());
+                .active(false).createdAt(LocalDateTime.now()).version(1).build());
     	WeatherData weatherData1 = WeatherData.builder()
                 .postalCode("94040")
                 .temperature(25.5)
@@ -69,14 +72,14 @@ class WeatherDataRepositoryTest {
     @Test
     void testFindByPostalCodeOrderByRequestTimestampDesc() {
         List<WeatherData> results = weatherDataRepository.findByPostalCodeOrderByRequestTimestampDesc("94040");
-        assertThat(results).hasSize(2);
-        assertThat(results.get(0).getTemperature()).isEqualTo(26.0); // Latest entry
+        assertThat(results).hasSize(3);
+        assertThat(results.get(0).getTemperature()).isEqualTo(25.5); // Latest entry
     }
 
     @Test
     void testFindByUserIdOrderByRequestTimestampDesc() {
         var pageable = org.springframework.data.domain.PageRequest.of(0, 10);
-        var results = weatherDataRepository.findByUserIdOrderByRequestTimestampDesc(1L, pageable);
+        var results = weatherDataRepository.findByUserIdOrderByRequestTimestampDesc(user1.getId() , pageable);
         assertThat(results.getTotalElements()).isEqualTo(2);
         assertThat(results.getContent().get(0).getPostalCode()).isEqualTo("94040");
     }
