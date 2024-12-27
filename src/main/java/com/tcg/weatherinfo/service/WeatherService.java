@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +38,7 @@ public class WeatherService {
 	private String baseUrl;
 
 	@Transactional
+	@Cacheable(value = "weatherCache", key = "#postalCode")
 	public WeatherResponseDTO getWeatherData(String postalCode, String username) {
 		log.info("Fetching weather data for postal code: {}", postalCode);
 
@@ -44,6 +46,7 @@ public class WeatherService {
 				.orElseThrow(() -> new UserNotFoundException("User not found: " + username));
 
 		if (!user.isActive()) {
+			log.error(user.getUsername()+ " is not active!");
 			throw new WeatherServiceException("User account is not active");
 		}
 

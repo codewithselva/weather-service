@@ -20,11 +20,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/v1/weather")
 @RequiredArgsConstructor
 @Tag(name = "Weather API", description = "Endpoints for weather data operations")
+@Slf4j
 public class WeatherController {
 	private final WeatherService weatherService;
 
@@ -33,7 +35,8 @@ public class WeatherController {
 	@ApiResponse(responseCode = "400", description = "Invalid postal code format")
 	@ApiResponse(responseCode = "403", description = "User not active or unauthorized")
 	@PostMapping("/current")
-	public ResponseEntity<WeatherResponseDTO> getCurrentWeather(@Valid @RequestBody WeatherRequestDTO request) {
+	public ResponseEntity<WeatherResponseDTO> getCurrentWeather( @RequestBody WeatherRequestDTO request) {
+		log.info("Request Body: "+request.toString());
 		WeatherResponseDTO response = weatherService.getWeatherData(request.getPostalCode(), request.getUsername());
 		return ResponseEntity.ok(response);
 	}
