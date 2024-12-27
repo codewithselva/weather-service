@@ -2,8 +2,8 @@ package com.tcg.weatherinfo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
 import com.tcg.weatherinfo.entity.User;
 import com.tcg.weatherinfo.entity.WeatherData;
+import com.tcg.weatherinfo.exception.InvalidPostalCodeException;
 import com.tcg.weatherinfo.exception.UserNotFoundException;
 import com.tcg.weatherinfo.integration.OpenWeatherMapClient;
 import com.tcg.weatherinfo.integration.dto.WeatherApiResponse;
@@ -29,7 +30,10 @@ import com.tcg.weatherinfo.integration.mapper.WeatherMapper;
 import com.tcg.weatherinfo.repository.UserRepository;
 import com.tcg.weatherinfo.repository.WeatherDataRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @ExtendWith(MockitoExtension.class)
+@Slf4j
 public class WeatherServiceTest {
 
     @Mock
@@ -49,6 +53,7 @@ public class WeatherServiceTest {
 
     private User user;
     private WeatherData weatherData;
+    private WeatherResponseDTO weatherResponseDTO;
 
     @BeforeEach
     void setUp() {
@@ -58,31 +63,37 @@ public class WeatherServiceTest {
         user.setId(1L);
 
         weatherData = new WeatherData();
-        weatherData.setPostalCode("94040");
+        weatherData.setPostalCode("94041");
         weatherData.setTemperature(75.0);
         weatherData.setHumidity(50);
         weatherData.setWeatherCondition("Sunny");
         weatherData.setRequestTimestamp(LocalDateTime.now());
         weatherData.setUser(user);
+        
+        weatherResponseDTO= new WeatherResponseDTO();
+        weatherResponseDTO.setPostalCode("94041");
+        weatherResponseDTO.setTemperature(75.0);
     }
 
     @Test
     void testGetWeatherData_Valid() throws Exception {
+    	log.info("Executing Test Case : testGetWeatherData_Valid");
         WeatherApiResponse apiResponse = new WeatherApiResponse();
         when(userRepository.findByUsername(anyString())).thenReturn(java.util.Optional.of(user));
         when(weatherClient.getWeatherByPostalCode(anyString())).thenReturn(apiResponse);
-        when(weatherMapper.toWeatherData(apiResponse, "94040")).thenReturn(weatherData);
+        when(weatherMapper.toWeatherData(apiResponse, "94041")).thenReturn(weatherData);
         when(weatherDataRepository.save(weatherData)).thenReturn(weatherData);
-        when(weatherMapper.toResponseDTO(weatherData)).thenReturn(new WeatherResponseDTO());
+        when(weatherMapper.toResponseDTO(weatherData)).thenReturn(weatherResponseDTO);
 
-        CompletableFuture<WeatherResponseDTO> response = weatherService.getWeatherData("94040", "testuser");
-        assertEquals("94040", response.get().getPostalCode());
+        CompletableFuture<WeatherResponseDTO> response = weatherService.getWeatherData("94041", "testuser");
+        assertEquals("94041", response.get().getPostalCode());
         verify(weatherDataRepository, times(1)).save(weatherData);
+        log.info("Execution completed : testGetWeatherData_Valid");
     }
 
     @Test
     void testGetWeatherData_InvalidPostalCode() {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(InvalidPostalCodeException.class, () -> {
             weatherService.getWeatherData("invalid", "testuser");
         });
     }
@@ -91,7 +102,7 @@ public class WeatherServiceTest {
     void testGetWeatherData_UserNotFound() {
         when(userRepository.findByUsername(anyString())).thenReturn(java.util.Optional.empty());
         assertThrows(UserNotFoundException.class, () -> {
-            weatherService.getWeatherData("94040", "unknown");
+            weatherService.getWeatherData("94041", "unknown");
         });
     }
 
@@ -101,9 +112,9 @@ public class WeatherServiceTest {
         when(weatherDataRepository.findByPostalCodeAndUserIdOrderByRequestTimestampDesc(anyString(),anyLong()))
                 .thenReturn(List.of(weatherData));
 
-        CompletableFuture<List<WeatherResponseDTO>> response = weatherService.getWeatherHistory("94040", "testuser");
+        CompletableFuture<List<WeatherResponseDTO>> response = weatherService.getWeatherHistory("94041", "testuser");
         assertEquals(1, response.get().size());
-        verify(weatherDataRepository, times(1)).findByPostalCodeAndUserIdOrderByRequestTimestampDesc("94040", user.getId());
+        verify(weatherDataRepository, times(1)).findByPostalCodeAndUserIdOrderByRequestTimestampDesc("94041", user.getId());
     }
 
     @Test
@@ -117,7 +128,7 @@ public class WeatherServiceTest {
     void testGetWeatherHistory_UserNotFound() {
         when(userRepository.findByUsername(anyString())).thenReturn(java.util.Optional.empty());
         assertThrows(UserNotFoundException.class, () -> {
-            weatherService.getWeatherHistory("94040", "unknown");
+            weatherService.getWeatherHistory("94041", "unknown");
         });
     }
 
@@ -126,8 +137,8 @@ public class WeatherServiceTest {
         when(weatherDataRepository.findByPostalCodeOrderByRequestTimestampDesc(anyString()))
                 .thenReturn(List.of(weatherData));
 
-        CompletableFuture<List<WeatherResponseDTO>> response = weatherService.getWeatherHistory("94040", null);
+        CompletableFuture<List<WeatherResponseDTO>> response = weatherService.getWeatherHistory("94041", null);
         assertEquals(1, response.get().size());
-        verify(weatherDataRepository, times(1)).findByPostalCodeOrderByRequestTimestampDesc("94040");
+        verify(weatherDataRepository, times(1)).findByPostalCodeOrderByRequestTimestampDesc("94041");
     }
 }

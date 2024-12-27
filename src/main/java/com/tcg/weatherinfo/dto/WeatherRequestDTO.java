@@ -1,6 +1,6 @@
 package com.tcg.weatherinfo.dto;
 
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WeatherRequestDTO {
-	@Pattern(regexp = "^\\d{5}(?:[-\\s]\\d{4})?$", message = "Invalid US postal code format")
+	@NotBlank(message = "Postal code is required")
 	private String postalCode;
-	
+
 	private String username;
 }

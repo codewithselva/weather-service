@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
 import com.tcg.weatherinfo.entity.User;
 import com.tcg.weatherinfo.entity.WeatherData;
+import com.tcg.weatherinfo.exception.InvalidPostalCodeException;
 import com.tcg.weatherinfo.exception.UserNotFoundException;
 import com.tcg.weatherinfo.exception.WeatherServiceException;
 import com.tcg.weatherinfo.integration.OpenWeatherMapClient;
@@ -48,9 +49,9 @@ public class WeatherService {
 	@Async
 	public CompletableFuture<WeatherResponseDTO> getWeatherData(String postalCode, String username) {
 		log.info("Fetching weather data for postal code: {}", postalCode);
-
+		System.out.println("postal code: {}"+ postalCode);
 		if (!pattern.matcher(postalCode).matches()) {
-			throw new IllegalArgumentException("Invalid US postal code format: " + postalCode);
+			throw new InvalidPostalCodeException("Invalid US postal code format: " + postalCode);
 		}
 
 		User user = userRepository.findByUsername(username)

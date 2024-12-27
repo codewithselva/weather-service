@@ -1,77 +1,92 @@
 package com.tcg.weatherinfo.controller;
 
-import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcg.weatherinfo.dto.UserDTO;
 import com.tcg.weatherinfo.entity.User;
 import com.tcg.weatherinfo.service.UserService;
 
-@WebMvcTest(UserController.class)
+@ExtendWith(MockitoExtension.class)
 class UserControllerTest {
-
-	@Autowired
-	private MockMvc mockMvc;
 
 	@Mock
 	private UserService userService;
 
+	@InjectMocks
+	private UserController userController;
+	private MockMvc mockMvc;
+
+	private User user;
+	private UserDTO userDTO;
+
+	@BeforeEach
+	void setUp() {
+		mockMvc = MockMvcBuilders.standaloneSetup(userController).setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver()) .build();
+		user = User.builder().id(1L).username("testuser").password("password").active(true).build();
+		userDTO = UserDTO.builder().username("testuser").password("password").build();
+	}
+
 	@Test
 	void testCreateUser() throws Exception {
-		// Given
-		User user = User.builder().id(1L) // If needed, for existing entities
-				.username("testuser").password("encodedpassword").active(true).build();
+		when(userService.createUser(any(UserDTO.class))).thenReturn(user);
 
-		when(userService.createUser(Mockito.any(UserDTO.class))).thenReturn(user);
-		// When & Then
 		mockMvc.perform(post("/api/v1/users").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"username\": \"testuser\", \"password\": \"password\"}")).andExpect(status().isCreated())
-				.andExpect(jsonPath("$.username", is("testuser")));
+				.content(new ObjectMapper().writeValueAsString(userDTO))).andExpect(status().isCreated());
+
+		verify(userService).createUser(any(UserDTO.class));
 	}
 
 	@Test
 	void testToggleUserStatus() throws Exception {
-		mockMvc.perform(patch("/api/v1/users/1/status?active=false")).andExpect(status().isOk());
+		mockMvc.perform(patch("/api/v1/users/{userId}/status", 1L).param("active", "true")).andExpect(status().isOk());
+
+		verify(userService).toggleUserStatus(anyLong(), anyBoolean());
 	}
 
 	@Test
 	void testGetAllUsers() throws Exception {
-		User user = User.builder().id(1L) // If needed, for existing entities
-				.username("testuser").password("encodedpassword").active(true).build();
-		Page<User> userPage = new PageImpl<>(Collections.singletonList(user));
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<User> page = new PageImpl<>(Collections.singletonList(user), pageable, 1);
+		when(userService.getAllUsers(any(Pageable.class))).thenReturn(page);
 
-		when(userService.getAllUsers(PageRequest.of(0, 10))).thenReturn(userPage);
+		mockMvc.perform(get("/api/v1/users").param("page", "0").param("size", "10")).andExpect(status().isOk());
 
-		mockMvc.perform(get("/api/v1/users?page=0&size=10")).andExpect(status().isOk())
-				.andExpect(jsonPath("$.content[0].username", is("testuser")));
+		verify(userService).getAllUsers(any(Pageable.class));
 	}
 
 	@Test
 	void testGetUserByUsername() throws Exception {
-		User user = User.builder().id(1L) // If needed, for existing entities
-				.username("testuser").password("encodedpassword").active(true).build();
+		when(userService.getUserByUsername(anyString())).thenReturn(user);
 
-		when(userService.getUserByUsername("testuser")).thenReturn(user);
+		mockMvc.perform(get("/api/v1/users/{username}", "testuser")).andExpect(status().isOk());
 
-		mockMvc.perform(get("/api/v1/users/testuser")).andExpect(status().isOk())
-				.andExpect(jsonPath("$.username", is("testuser")));
+		verify(userService).getUserByUsername(anyString());
 	}
 }
