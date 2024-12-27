@@ -69,3 +69,7 @@ Feel free to submit pull requests or open issues to improve the project.
 
 ## License
 This project is licensed under the MIT License.
+
+![Java](https://img.shields.io/badge/java-%3E%3D21-blue)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green)
+![License](https://img.shields.io/badge/license-MIT-blue)
