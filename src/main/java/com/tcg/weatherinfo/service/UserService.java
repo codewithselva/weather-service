@@ -28,7 +28,7 @@ public class UserService {
 		}
 
 		User user = User.builder().username(userDTO.getUsername())
-				.password(userDTO.getPassword()).active(true).build();
+				.password(userDTO.getPassword()).active(userDTO.isActive()).build();
 
 		return userRepository.save(user);
 	}
