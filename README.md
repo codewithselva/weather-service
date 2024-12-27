@@ -52,11 +52,11 @@ GET /api/v1/weather/history?postalCode={postalCode}&username={username}: Retriev
 
 ## Testing
 To run the tests:
-    mvn test
+      mvn test
 
 ## Building a Jar
 To build an executable jar file:
-    mvn clean package
+      mvn clean package
 
 The jar file will be created in the target directory.
 
