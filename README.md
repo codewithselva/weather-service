@@ -16,14 +16,14 @@ This project is a weather service application built using Spring Boot. It provid
 ## Getting Started
 ### Clone the repository
 
-git clone https://github.com/codewithselva/weather-service.git
-cd weather-service
+- git clone https://github.com/codewithselva/weather-service.git
+- cd weather-service
 
 ## Build the project
-mvn clean install
+- mvn clean install
 
 ## Run the application
-mvn spring-boot:run
+- mvn spring-boot:run
 
 ## Configuration
 ### OpenWeatherMap
