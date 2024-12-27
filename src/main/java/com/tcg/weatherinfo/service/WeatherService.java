@@ -50,6 +50,7 @@ public class WeatherService {
 	public CompletableFuture<WeatherResponseDTO> getWeatherData(String postalCode, String username) {
 		log.info("Fetching weather data for postal code: {}", postalCode);
 		System.out.println("postal code: {}"+ postalCode);
+		postalCode = postalCode.replaceAll("^\"|\"$", "");
 		if (!pattern.matcher(postalCode).matches()) {
 			throw new InvalidPostalCodeException("Invalid US postal code format: " + postalCode);
 		}
@@ -81,7 +82,9 @@ public class WeatherService {
 	}
 
 	public CompletableFuture<List<WeatherResponseDTO>> getWeatherHistory(String postalCode, String username) {
-		if (!StringUtils.hasLength(postalCode) || !pattern.matcher(postalCode).matches()) {
+		// Remove leading and trailing quotes 
+		postalCode = postalCode.replaceAll("^\"|\"$", "");
+		if (!StringUtils.hasLength(postalCode) || !(pattern.matcher(postalCode).matches())) {
 			throw new IllegalArgumentException("Invalid US postal code format: " + postalCode);
 		}
 		User user = null;

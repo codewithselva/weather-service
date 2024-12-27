@@ -3,6 +3,7 @@ package com.tcg.weatherinfo.controller;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tcg.weatherinfo.dto.WeatherRequestDTO;
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
+import com.tcg.weatherinfo.exception.InvalidPostalCodeException;
 import com.tcg.weatherinfo.service.WeatherService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +38,13 @@ public class WeatherController {
 	public CompletableFuture<ResponseEntity<WeatherResponseDTO>> getCurrentWeather(
 			@Valid @RequestBody WeatherRequestDTO request) {
 		return weatherService.getWeatherData(request.getPostalCode(), request.getUsername())
-				.thenApply(ResponseEntity::ok);
+				.thenApply(ResponseEntity::ok).exceptionally(throwable -> {
+					Throwable cause = throwable.getCause();
+					if (cause instanceof InvalidPostalCodeException) {
+						return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+					}
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+				});
 	}
 
 	@Operation(summary = "Get weather history", description = "Retrieves weather history for a given postal code")

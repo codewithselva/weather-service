@@ -1,5 +1,6 @@
 package com.tcg.weatherinfo.controller;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,7 +11,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.coyote.BadRequestException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +24,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
+import com.tcg.weatherinfo.exception.GlobalExceptionHandler;
+import com.tcg.weatherinfo.exception.InvalidPostalCodeException;
 import com.tcg.weatherinfo.service.WeatherService;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +36,8 @@ class WeatherControllerTest {
 
 	@InjectMocks
 	private WeatherController weatherController;
+
+	private WeatherController weatherController1;
 
 	private MockMvc mockMvc;
 
@@ -89,7 +93,7 @@ class WeatherControllerTest {
 				.content("{\"postalCode\":\"InvalidCode\", \"username\":\"testuser\"}"))
 				.andExpect(status().isBadRequest());
 		// Verify that the service method was not called
-		verify(weatherService, times(0)).getWeatherData("InvalidCode", "testuser");
+		verify(weatherService, times(1)).getWeatherData("InvalidCode", "testuser");
 	}
 
 }

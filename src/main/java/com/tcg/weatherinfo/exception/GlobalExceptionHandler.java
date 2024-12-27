@@ -1,8 +1,10 @@
 package com.tcg.weatherinfo.exception;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletionException;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -28,6 +30,7 @@ public class GlobalExceptionHandler {
 	public ErrorResponse handleUserNotFoundException(UserNotFoundException ex) {
 		return new ErrorResponse(HttpStatus.NOT_FOUND.value(), "User Not Found", ex.getMessage(), LocalDateTime.now());
 	}
+
 
 	@ExceptionHandler(InvalidPostalCodeException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -55,6 +58,14 @@ public class GlobalExceptionHandler {
 		log.error("External API error: ", ex);
 		return new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), "External Service Error",
 				"Unable to fetch weather data from external service", LocalDateTime.now());
+	}
+
+	@ExceptionHandler(CompletionException.class)
+	public ResponseEntity<String> handleCompletionException(CompletionException ex) {
+		if (ex.getCause() instanceof InvalidPostalCodeException) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getCause().getMessage());
+		}
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	}
 
 	@ExceptionHandler(Exception.class)

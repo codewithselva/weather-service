@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  h2:
+    console:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE  # To log parameter values
+    com:
+      zaxxer:
+        hikari: INFO
+    springframework:
+      http: DEBUG
+    web: DEBUG
+
+weather:
+  api:
+    key: b3de109dfca2fabd39801c5170a75703
+    baseUrl: https://api.openweathermap.org/data/2.5/weather
+    connectTimeout: 3000
+    readTimeout: 3000
+    retryAttempts: 3
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+security:
+  jwt:
+    secret: 987654321
+    expiration: 86400000 # 24 hours
