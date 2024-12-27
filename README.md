@@ -7,6 +7,12 @@ This project is a weather service application built using Spring Boot. It provid
 - Java 21
 - Maven 3.x
 
+## Features
+- Real-time weather data retrieval
+- Historical weather data storage
+- Postal code validation
+- Swagger/OpenAPI documentation
+  
 ## Getting Started
 ### Clone the repository
 
