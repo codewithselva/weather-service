@@ -16,14 +16,14 @@ This project is a weather service application built using Spring Boot. It provid
 ## Getting Started
 ### Clone the repository
 
-- git clone https://github.com/codewithselva/weather-service.git
-- cd weather-service
+    git clone https://github.com/codewithselva/weather-service.git
+    cd weather-service
 
 ## Build the project
-- mvn clean install
+    mvn clean install
 
 ## Run the application
-- mvn spring-boot:run
+    mvn spring-boot:run
 
 ## Configuration
 ### OpenWeatherMap
@@ -32,17 +32,17 @@ This project is a weather service application built using Spring Boot. It provid
 The application uses an in-memory H2 database by default. You can change the database configuration in src/main/resources/application-test.yml.
 
 Example configuration:
-spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
-  h2:
-    console:
-      enabled: true
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    spring:
+      datasource:
+        url: jdbc:h2:mem:testdb
+        driverClassName: org.h2.Driver
+        username: sa
+        password: password
+      h2:
+        console:
+          enabled: true
+      jpa:
+        database-platform: org.hibernate.dialect.H2Dialect
 
 ### Swagger/OpenAPI
 Swagger UI is available at http://localhost:8080/swagger-ui.html after starting the application.
@@ -66,9 +66,9 @@ Spring Boot DevTools: DevTools is included as an optional dependency for develop
 ## Troubleshooting
 If you encounter any issues, make sure that:
 
-    All dependencies are correctly included in pom.xml.
-    The database configuration is correct.
-    You are using the correct version of Java and Maven.
+    - All dependencies are correctly included in pom.xml.
+    - The database configuration is correct.
+    - You are using the correct version of Java and Maven.
 
 ## Contributing
 Feel free to submit pull requests or open issues to improve the project.
