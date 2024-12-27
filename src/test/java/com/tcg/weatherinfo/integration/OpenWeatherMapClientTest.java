@@ -19,7 +19,11 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -40,13 +44,14 @@ class OpenWeatherMapClientTest {
 	@InjectMocks
 	private OpenWeatherMapClient openWeatherMapClient;
 
-	@Value("${weather.api.key}")
+	@Value("${weather.api.key:dummyApiKey}")
 	private String apiKey;
 
-	@Value("${weather.api.baseUrl}")
+	@Value("${weather.api.baseUrl:https://api.openweathermap.org/data/2.5/weather}")
 	private String baseUrl;
 
 	private String postalCode;
+
 	private String validUrl;
 
 	@BeforeEach
@@ -54,6 +59,9 @@ class OpenWeatherMapClientTest {
 		MockitoAnnotations.openMocks(this);
 		postalCode = "94040";
 		validUrl = String.format("%s?zip=%s,US&appid=%s&units=metric", baseUrl, postalCode, apiKey);
+		openWeatherMapClient = new OpenWeatherMapClient(restTemplate);
+		openWeatherMapClient.apiKey = apiKey;
+		openWeatherMapClient.baseUrl = baseUrl;
 	}
 
 	@Test
@@ -66,8 +74,13 @@ class OpenWeatherMapClientTest {
 				.statusCode(200).build();
 		System.out.println("VALID URL ==> " + validUrl);
 
+		// Create the HttpEntity object
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
 		// Mock the restTemplate behavior to return the mock response
-		when(restTemplate.getForEntity(validUrl, WeatherApiResponse.class))
+		when(restTemplate.exchange(validUrl, HttpMethod.GET, requestEntity, WeatherApiResponse.class))
 				.thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
 
 		// Act
@@ -79,7 +92,7 @@ class OpenWeatherMapClientTest {
 		assertNotNull(response);
 		assertEquals(20.0, response.getMain().getTemp());
 		assertEquals(50.0, response.getMain().getHumidity());
-		verify(restTemplate, times(1)).getForEntity(validUrl, WeatherApiResponse.class);
+		verify(restTemplate, times(1)).exchange(validUrl, HttpMethod.GET, requestEntity, WeatherApiResponse.class);
 	}
 
 	@Test

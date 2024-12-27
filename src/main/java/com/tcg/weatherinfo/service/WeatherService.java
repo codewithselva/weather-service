@@ -2,10 +2,15 @@ package com.tcg.weatherinfo.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
 import com.tcg.weatherinfo.entity.User;
@@ -36,9 +41,17 @@ public class WeatherService {
 	@Value("${weather.api.baseUrl}")
 	private String baseUrl;
 
+	String zipCodePattern = "^\\d{5}(?:[-\\s]\\d{4})?$";
+	Pattern pattern = Pattern.compile(zipCodePattern);
+
 	@Transactional
-	public WeatherResponseDTO getWeatherData(String postalCode, String username) {
+	@Async
+	public CompletableFuture<WeatherResponseDTO> getWeatherData(String postalCode, String username) {
 		log.info("Fetching weather data for postal code: {}", postalCode);
+
+		if (!pattern.matcher(postalCode).matches()) {
+			throw new IllegalArgumentException("Invalid US postal code format: " + postalCode);
+		}
 
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new UserNotFoundException("User not found: " + username));
@@ -59,19 +72,32 @@ public class WeatherService {
 			weatherData = weatherDataRepository.save(weatherData);
 
 			// Convert to response DTO
-			return weatherMapper.toResponseDTO(weatherData);
+			return CompletableFuture.completedFuture(weatherMapper.toResponseDTO(weatherData));
 		} catch (Exception e) {
 			log.error("Error fetching weather data: ", e);
 			throw new WeatherServiceException("Error fetching weather data: " + e.getMessage());
 		}
 	}
 
-	public List<WeatherResponseDTO> getWeatherHistory(String postalCode, String username) {
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new UserNotFoundException("User not found: " + username));
-
-		return weatherDataRepository.findByPostalCodeAndUserIdOrderByRequestTimestampDesc(postalCode, user.getId())
-				.stream().map(this::mapToWeatherResponseDTO).toList();
+	public CompletableFuture<List<WeatherResponseDTO>> getWeatherHistory(String postalCode, String username) {
+		if (!StringUtils.hasLength(postalCode) || !pattern.matcher(postalCode).matches()) {
+			throw new IllegalArgumentException("Invalid US postal code format: " + postalCode);
+		}
+		User user = null;
+		if (StringUtils.hasLength(username)) {
+			user = userRepository.findByUsername(username)
+					.orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+		}
+		List<WeatherResponseDTO> history;
+		if (ObjectUtils.isEmpty(user)) {
+			history = weatherDataRepository.findByPostalCodeOrderByRequestTimestampDesc(postalCode).stream()
+					.map(this::mapToWeatherResponseDTO).toList();
+		} else {
+			history = weatherDataRepository
+					.findByPostalCodeAndUserIdOrderByRequestTimestampDesc(postalCode, user.getId()).stream()
+					.map(this::mapToWeatherResponseDTO).toList();
+		}
+		return CompletableFuture.completedFuture(history);
 	}
 
 	private WeatherResponseDTO mapToWeatherResponseDTO(WeatherData data) {

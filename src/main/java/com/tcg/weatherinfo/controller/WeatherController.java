@@ -1,14 +1,14 @@
 package com.tcg.weatherinfo.controller;
 
-import java.security.Principal;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tcg.weatherinfo.dto.WeatherRequestDTO;
@@ -33,25 +33,16 @@ public class WeatherController {
 	@ApiResponse(responseCode = "400", description = "Invalid postal code format")
 	@ApiResponse(responseCode = "403", description = "User not active or unauthorized")
 	@PostMapping("/current")
-	public ResponseEntity<WeatherResponseDTO> getCurrentWeather(@Valid @RequestBody WeatherRequestDTO request) {
-		WeatherResponseDTO response = weatherService.getWeatherData(request.getPostalCode(), request.getUsername());
-		return ResponseEntity.ok(response);
+	public CompletableFuture<ResponseEntity<WeatherResponseDTO>> getCurrentWeather(
+			@Valid @RequestBody WeatherRequestDTO request) {
+		return weatherService.getWeatherData(request.getPostalCode(), request.getUsername())
+				.thenApply(ResponseEntity::ok);
 	}
 
 	@Operation(summary = "Get weather history", description = "Retrieves weather history for a given postal code")
-	@GetMapping("/history/{postalCode}/{username}")
-	public ResponseEntity<List<WeatherResponseDTO>> getWeatherHistory(@PathVariable String postalCode,
-			@PathVariable String username) {
-		List<WeatherResponseDTO> history = weatherService.getWeatherHistory(postalCode, username);
-		return ResponseEntity.ok(history);
-	}
-
-	@Operation(summary = "Get weather history", description = "Retrieves weather history for a given postal code")
-	@GetMapping("/history/{postalCode}")
-	public ResponseEntity<List<WeatherResponseDTO>> getWeatherHistoryNew(@PathVariable String postalCode,
-			Principal principal) {
-		String username = principal.getName();
-		List<WeatherResponseDTO> history = weatherService.getWeatherHistory(postalCode, username);
-		return ResponseEntity.ok(history);
+	@GetMapping("/history")
+	public CompletableFuture<ResponseEntity<List<WeatherResponseDTO>>> getWeatherHistory(
+			@RequestParam String postalCode, @RequestParam String username) {
+		return weatherService.getWeatherHistory(postalCode, username).thenApply(ResponseEntity::ok);
 	}
 }

@@ -29,57 +29,58 @@ import lombok.extern.slf4j.Slf4j;
 @EnableRetry
 public class OpenWeatherMapClient {
 
-    private final RestTemplate restTemplate;
+	private final RestTemplate restTemplate;
 
-    @Value("${weather.api.key}")
-    private String apiKey;
+	@Value("${weather.api.key}")
+	String apiKey;
 
-    @Value("${weather.api.baseUrl}")
-    private String baseUrl;
+	@Value("${weather.api.baseUrl}")
+	String baseUrl;
 
-    @PostConstruct
-    public void validateConfiguration() {
-        if (apiKey == null || apiKey.isEmpty() || baseUrl == null || baseUrl.isEmpty()) {
-            throw new WeatherServiceException("API key or base URL is missing in configuration");
-        }
-    }
+	@PostConstruct
+	public void validateConfiguration() {
+		if (apiKey == null || apiKey.isEmpty() || baseUrl == null || baseUrl.isEmpty()) {
+			throw new WeatherServiceException("API key or base URL is missing in configuration");
+		}
+	}
 
-    @Retryable(maxAttempts = 3, value = { HttpServerErrorException.class, HttpClientErrorException.class })
-    @Cacheable(value = "weatherDataCache", key = "#postalCode")
-    public WeatherApiResponse getWeatherByPostalCode(String postalCode) {
-        validatePostalCode(postalCode);
-        try {
+	@Retryable(maxAttempts = 3, value = { HttpServerErrorException.class, HttpClientErrorException.class })
+	@Cacheable(value = "weatherDataCache", key = "#postalCode")
+	public WeatherApiResponse getWeatherByPostalCode(String postalCode) {
+		validatePostalCode(postalCode);
+		try {
+			System.out.println("BASEURL : " + baseUrl);
+			String url = String.format("%s?zip=%s,US&appid=%s&units=metric", baseUrl, postalCode, apiKey);
+			log.debug("Calling OpenWeatherMap API with URL: {}", url);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
 
-            String url = String.format("%s?zip=%s,US&appid=%s&units=metric", baseUrl, postalCode, apiKey);
-            log.debug("Calling OpenWeatherMap API with URL: {}", url);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+			HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
-            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+			// Directly map the response to WeatherApiResponse
+			ResponseEntity<WeatherApiResponse> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity,
+					WeatherApiResponse.class);
 
-            // Directly map the response to WeatherApiResponse
-            ResponseEntity<WeatherApiResponse> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, WeatherApiResponse.class);
+			if (response == null || response.getBody() == null) {
+				log.error("Received no response body for postal code: {}", postalCode);
+				throw new WeatherServiceException("No response received from weather API");
+			}
 
-            if (response == null || response.getBody() == null) {
-                log.error("Received no response body for postal code: {}", postalCode);
-                throw new WeatherServiceException("No response received from weather API");
-            }
+			log.info("Successfully retrieved weather data for postal code: {}", postalCode);
+			return response.getBody();
+		} catch (HttpClientErrorException | HttpServerErrorException e) {
+			log.error("Error from weather API for postal code {}: {} - {}", postalCode, e.getStatusCode(),
+					e.getResponseBodyAsString());
+			throw new WeatherServiceException("Weather API error: " + e.getMessage(), e);
+		} catch (Exception e) {
+			log.error("Unexpected error fetching weather data for postal code {}: {}", postalCode, e.getMessage());
+			throw new WeatherServiceException("Failed to fetch weather data: " + e.getMessage(), e);
+		}
+	}
 
-            log.info("Successfully retrieved weather data for postal code: {}", postalCode);
-            return response.getBody();
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("Error from weather API for postal code {}: {} - {}", postalCode, e.getStatusCode(),
-                    e.getResponseBodyAsString());
-            throw new WeatherServiceException("Weather API error: " + e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error fetching weather data for postal code {}: {}", postalCode, e.getMessage());
-            throw new WeatherServiceException("Failed to fetch weather data: " + e.getMessage(), e);
-        }
-    }
-
-    private void validatePostalCode(String postalCode) {
-        if (postalCode == null || !postalCode.matches("\\d{5}")) {
-            throw new WeatherServiceException("Invalid postal code format: " + postalCode);
-        }
-    }
+	private void validatePostalCode(String postalCode) {
+		if (postalCode == null || !postalCode.matches("\\d{5}")) {
+			throw new WeatherServiceException("Invalid postal code format: " + postalCode);
+		}
+	}
 }
