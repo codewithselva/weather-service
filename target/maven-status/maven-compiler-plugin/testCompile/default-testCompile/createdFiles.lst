@@ -1,0 +1,8 @@
+com\tcg\weatherinfo\controller\WeatherControllerTest.class
+com\tcg\weatherinfo\repository\WeatherDataRepositoryTest.class
+com\tcg\weatherinfo\integration\OpenWeatherMapClientTest.class
+com\tcg\weatherinfo\service\UserServiceTest.class
+com\tcg\weatherinfo\controller\HealthControllerTest.class
+com\tcg\weatherinfo\controller\UserControllerTest.class
+com\tcg\weatherinfo\repository\UserRepositoryTest.class
+com\tcg\weatherinfo\service\WeatherServiceTest.class

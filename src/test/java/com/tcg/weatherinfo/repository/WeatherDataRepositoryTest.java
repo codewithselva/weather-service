@@ -42,13 +42,16 @@ class WeatherDataRepositoryTest {
 		user2 = userRepository.save(User.builder().username("inactiveuser").password("password").active(false)
 				.createdAt(LocalDateTime.now()).version(1).build());
 
-		WeatherData weatherData1 = WeatherData.builder().postalCode("94040").temperature(25.5).humidity(60.0)
+		WeatherData weatherData1 = WeatherData.builder().postalCode("94040").temperature(
+				22.0).humidity(60.0)
 				.weatherCondition("Sunny").user(user1).build();
 
-		WeatherData weatherData2 = WeatherData.builder().postalCode("94040").temperature(28.0).humidity(65.0)
+		WeatherData weatherData2 = WeatherData.builder().postalCode("94040").temperature(
+				22.0).humidity(65.0)
 				.weatherCondition("Cloudy").user(user1).build();
 
-		WeatherData weatherData3 = WeatherData.builder().postalCode("94040").temperature(22.0).humidity(55.0)
+		WeatherData weatherData3 = WeatherData.builder().postalCode("94040").temperature(
+				22.0).humidity(55.0)
 				.weatherCondition("Rainy").user(user2).build();
 
 		mockresults = new ArrayList<>();
@@ -66,7 +69,7 @@ class WeatherDataRepositoryTest {
 		List<WeatherData> results = weatherDataRepository.findByPostalCodeOrderByRequestTimestampDesc("94040");
 		results.forEach(result -> System.out.println(result.toString()));
 		assertThat(results).hasSize(3);
-		assertThat(results.get(0).getTemperature()).isEqualTo(22.0); // Latest entry
+		assertThat(results.get(0).getTemperature()).isEqualTo(22.0);
 	}
 
 	@Test

@@ -15,7 +15,8 @@
     {
       "name": "weather.api.connect-timeout",
       "type": "java.lang.Integer",
-      "sourceType": "com.tcg.weatherinfo.config.WeatherApiProperties"
+      "sourceType": "com.tcg.weatherinfo.config.WeatherApiProperties",
+      "defaultValue": 0
     },
     {
       "name": "weather.api.key",
@@ -25,12 +26,14 @@
     {
       "name": "weather.api.read-timeout",
       "type": "java.lang.Integer",
-      "sourceType": "com.tcg.weatherinfo.config.WeatherApiProperties"
+      "sourceType": "com.tcg.weatherinfo.config.WeatherApiProperties",
+      "defaultValue": 0
     },
     {
       "name": "weather.api.retry-attempts",
       "type": "java.lang.Integer",
-      "sourceType": "com.tcg.weatherinfo.config.WeatherApiProperties"
+      "sourceType": "com.tcg.weatherinfo.config.WeatherApiProperties",
+      "defaultValue": 0
     }
   ],
   "hints": []

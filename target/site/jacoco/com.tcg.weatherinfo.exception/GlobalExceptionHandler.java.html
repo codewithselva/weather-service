@@ -31,37 +31,37 @@ import lombok.extern.slf4j.Slf4j;
 <span class="nc" id="L31">		return new ErrorResponse(HttpStatus.NOT_FOUND.value(), &quot;User Not Found&quot;, ex.getMessage(), LocalDateTime.now());</span>
 	}
 
-
 	@ExceptionHandler(InvalidPostalCodeException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ErrorResponse handleInvalidPostalCodeException(InvalidPostalCodeException ex) {
-<span class="nc" id="L38">		return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), &quot;Invalid Postal Code&quot;, ex.getMessage(),</span>
-<span class="nc" id="L39">				LocalDateTime.now());</span>
+<span class="nc" id="L37">		return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), &quot;Invalid Postal Code&quot;, ex.getMessage(),</span>
+<span class="nc" id="L38">				LocalDateTime.now());</span>
 	}
 
 	@ExceptionHandler(UserNotActiveException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	public ErrorResponse handleUserNotActiveException(UserNotActiveException ex) {
-<span class="nc" id="L45">		return new ErrorResponse(HttpStatus.FORBIDDEN.value(), &quot;User Not Active&quot;, ex.getMessage(), LocalDateTime.now());</span>
+<span class="nc" id="L44">		return new ErrorResponse(HttpStatus.FORBIDDEN.value(), &quot;User Not Active&quot;, ex.getMessage(), LocalDateTime.now());</span>
 	}
 
 	@ExceptionHandler(BindException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ErrorResponse handleBindException(BindException ex) {
-<span class="nc" id="L51">		return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), &quot;Validation Error&quot;,</span>
-<span class="nc" id="L52">				ex.getBindingResult().getAllErrors().get(0).getDefaultMessage(), LocalDateTime.now());</span>
+<span class="nc" id="L50">		return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), &quot;Validation Error&quot;,</span>
+<span class="nc" id="L51">				ex.getBindingResult().getAllErrors().get(0).getDefaultMessage(), LocalDateTime.now());</span>
 	}
 
 	@ExceptionHandler(RestClientException.class)
 	@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
 	public ErrorResponse handleRestClientException(RestClientException ex) {
-<span class="nc" id="L58">		log.error(&quot;External API error: &quot;, ex);</span>
-<span class="nc" id="L59">		return new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), &quot;External Service Error&quot;,</span>
-<span class="nc" id="L60">				&quot;Unable to fetch weather data from external service&quot;, LocalDateTime.now());</span>
+<span class="nc" id="L57">		log.error(&quot;External API error: &quot;, ex);</span>
+<span class="nc" id="L58">		return new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), &quot;External Service Error&quot;,</span>
+<span class="nc" id="L59">				&quot;Unable to fetch weather data from external service&quot;, LocalDateTime.now());</span>
 	}
 
 	@ExceptionHandler(CompletionException.class)
 	public ResponseEntity&lt;String&gt; handleCompletionException(CompletionException ex) {
+<span class="nc" id="L64">		System.out.println(&quot;EXCEPTION ==&gt;&gt;&gt;&gt; &quot; + ex.getCause());</span>
 <span class="nc bnc" id="L65" title="All 2 branches missed.">		if (ex.getCause() instanceof InvalidPostalCodeException) {</span>
 <span class="nc" id="L66">			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getCause().getMessage());</span>
 		}

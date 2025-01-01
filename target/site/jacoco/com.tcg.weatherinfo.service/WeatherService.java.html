@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WeatherService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">weather-service</a> &gt; <a href="index.source.html" class="el_package">com.tcg.weatherinfo.service</a> &gt; <span class="el_source">WeatherService.java</span></div><h1>WeatherService.java</h1><pre class="source lang-java linenums">package com.tcg.weatherinfo.service;
 
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
 import com.tcg.weatherinfo.entity.User;
@@ -28,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-<span class="fc" id="L31">@Slf4j</span>
+<span class="fc" id="L34">@Slf4j</span>
 @RequiredArgsConstructor
 public class WeatherService {
 	private final WeatherDataRepository weatherDataRepository;
@@ -48,71 +51,97 @@ public class WeatherService {
 	@Transactional
 	@Async
 	public CompletableFuture&lt;WeatherResponseDTO&gt; getWeatherData(String postalCode, String username) {
-<span class="fc" id="L51">		log.info(&quot;Fetching weather data for postal code: {}&quot;, postalCode);</span>
-<span class="fc" id="L52">		System.out.println(&quot;postal code: {}&quot;+ postalCode);</span>
-<span class="fc" id="L53">		postalCode = postalCode.replaceAll(&quot;^\&quot;|\&quot;$&quot;, &quot;&quot;);</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">		if (!pattern.matcher(postalCode).matches()) {</span>
-<span class="fc" id="L55">			throw new InvalidPostalCodeException(&quot;Invalid US postal code format: &quot; + postalCode);</span>
-		}
+<span class="fc" id="L54">		log.info(&quot;Fetching weather data for postal code: {}&quot;, postalCode);</span>
+<span class="fc" id="L55">		System.out.println(&quot;postal code: {}&quot; + postalCode);</span>
+<span class="fc" id="L56">		final String finalPostalCode = postalCode.replaceAll(&quot;^\&quot;|\&quot;$&quot;, &quot;&quot;); // Remove leading and trailing quotes</span>
 
-<span class="fc" id="L58">		User user = userRepository.findByUsername(username)</span>
-<span class="fc" id="L59">				.orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found: &quot; + username));</span>
+<span class="fc" id="L58">		return CompletableFuture.supplyAsync(() -&gt; {</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">			if (!pattern.matcher(finalPostalCode).matches()) {</span>
+<span class="fc" id="L60">				throw new InvalidPostalCodeException(&quot;Invalid US postal code format: &quot; + finalPostalCode);</span>
+			}
 
-<span class="pc bpc" id="L61" title="1 of 2 branches missed.">		if (!user.isActive()) {</span>
-<span class="nc" id="L62">			throw new WeatherServiceException(&quot;User account is not active&quot;);</span>
-		}
+<span class="fc" id="L63">			User user = userRepository.findByUsername(username)</span>
+<span class="fc" id="L64">					.orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found: &quot; + username));</span>
 
-		try {// Get weather data from API
-<span class="fc" id="L66">			WeatherApiResponse apiResponse = weatherClient.getWeatherByPostalCode(postalCode);</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">			if (!user.isActive()) {</span>
+<span class="nc" id="L67">				throw new WeatherServiceException(&quot;User account is not active&quot;);</span>
+			}
 
-			// Convert to domain model
-<span class="fc" id="L69">			WeatherData weatherData = weatherMapper.toWeatherData(apiResponse, postalCode);</span>
-<span class="fc" id="L70">			weatherData.setUser(user);</span>
-<span class="fc" id="L71">			weatherData.setRequestTimestamp(LocalDateTime.now());</span>
+			try {
+				// Get weather data from API
+<span class="fc" id="L72">				WeatherApiResponse apiResponse = weatherClient.getWeatherByPostalCode(finalPostalCode);</span>
 
-			// Save to database
-<span class="fc" id="L74">			weatherData = weatherDataRepository.save(weatherData);</span>
+				// Convert to domain model
+<span class="fc" id="L75">				WeatherData weatherData = weatherMapper.toWeatherData(apiResponse, finalPostalCode);</span>
+<span class="fc" id="L76">				weatherData.setUser(user);</span>
+<span class="fc" id="L77">				weatherData.setRequestTimestamp(LocalDateTime.now());</span>
 
-			// Convert to response DTO
-<span class="fc" id="L77">			return CompletableFuture.completedFuture(weatherMapper.toResponseDTO(weatherData));</span>
-<span class="nc" id="L78">		} catch (Exception e) {</span>
-<span class="nc" id="L79">			log.error(&quot;Error fetching weather data: &quot;, e);</span>
-<span class="nc" id="L80">			throw new WeatherServiceException(&quot;Error fetching weather data: &quot; + e.getMessage());</span>
-		}
+				// Save to database
+<span class="fc" id="L80">				weatherData = weatherDataRepository.save(weatherData);</span>
+
+				// Convert to response DTO
+<span class="fc" id="L83">				return weatherMapper.toResponseDTO(weatherData);</span>
+<span class="nc" id="L84">			} catch (HttpClientErrorException.Unauthorized ex) {</span>
+<span class="nc" id="L85">				log.error(&quot;Invalid API Key: &quot;, ex);</span>
+<span class="nc" id="L86">				throw new WeatherServiceException(&quot;Invalid API key&quot;, ex);</span>
+<span class="nc" id="L87">			} catch (Exception e) {</span>
+<span class="nc" id="L88">				log.error(&quot;Error fetching weather data: &quot;, e);</span>
+<span class="nc" id="L89">				throw new WeatherServiceException(&quot;Error fetching weather data: &quot; + e.getMessage(), e);</span>
+			}
+<span class="fc" id="L91">		}).exceptionally(ex -&gt; {</span>
+<span class="fc" id="L92">			Throwable cause = ex.getCause();</span>
+<span class="pc bpc" id="L93" title="3 of 6 branches missed.">			if (cause instanceof InvalidPostalCodeException || cause instanceof UserNotFoundException</span>
+					|| cause instanceof WeatherServiceException) {
+<span class="fc" id="L95">				throw new CompletionException(cause);</span>
+			} else {
+<span class="nc" id="L97">				log.error(&quot;Unexpected error occurred: &quot;, ex);</span>
+<span class="nc" id="L98">				throw new WeatherServiceException(&quot;Unexpected error fetching weather data: &quot; + ex.getMessage(), ex);</span>
+			}
+		});
 	}
 
 	public CompletableFuture&lt;List&lt;WeatherResponseDTO&gt;&gt; getWeatherHistory(String postalCode, String username) {
-		// Remove leading and trailing quotes 
-<span class="fc" id="L86">		postalCode = postalCode.replaceAll(&quot;^\&quot;|\&quot;$&quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L87" title="1 of 4 branches missed.">		if (!StringUtils.hasLength(postalCode) || !(pattern.matcher(postalCode).matches())) {</span>
-<span class="fc" id="L88">			throw new IllegalArgumentException(&quot;Invalid US postal code format: &quot; + postalCode);</span>
-		}
-<span class="fc" id="L90">		User user = null;</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">		if (StringUtils.hasLength(username)) {</span>
-<span class="fc" id="L92">			user = userRepository.findByUsername(username)</span>
-<span class="fc" id="L93">					.orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found: &quot; + username));</span>
-		}
-		List&lt;WeatherResponseDTO&gt; history;
-<span class="fc bfc" id="L96" title="All 2 branches covered.">		if (ObjectUtils.isEmpty(user)) {</span>
-<span class="fc" id="L97">			history = weatherDataRepository.findByPostalCodeOrderByRequestTimestampDesc(postalCode).stream()</span>
-<span class="fc" id="L98">					.map(this::mapToWeatherResponseDTO).toList();</span>
-<span class="fc" id="L99">		} else {</span>
-<span class="fc" id="L100">			history = weatherDataRepository</span>
-<span class="fc" id="L101">					.findByPostalCodeAndUserIdOrderByRequestTimestampDesc(postalCode, user.getId()).stream()</span>
-<span class="fc" id="L102">					.map(this::mapToWeatherResponseDTO).toList();</span>
-		}
-<span class="fc" id="L104">		return CompletableFuture.completedFuture(history);</span>
+<span class="fc" id="L104">		final String finalPostalCode = postalCode.replaceAll(&quot;^\&quot;|\&quot;$&quot;, &quot;&quot;);</span>
+<span class="fc" id="L105">		return CompletableFuture.supplyAsync(() -&gt; {</span>
+<span class="pc bpc" id="L106" title="1 of 4 branches missed.">			if (!StringUtils.hasLength(finalPostalCode) || !(pattern.matcher(finalPostalCode).matches())) {</span>
+<span class="fc" id="L107">				throw new IllegalArgumentException(&quot;Invalid US postal code format: &quot; + finalPostalCode);</span>
+			}
+<span class="fc" id="L109">			User user = null;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">			if (StringUtils.hasLength(username)) {</span>
+<span class="fc" id="L111">				user = userRepository.findByUsername(username)</span>
+<span class="fc" id="L112">						.orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found: &quot; + username));</span>
+			}
+			List&lt;WeatherResponseDTO&gt; history;
+<span class="fc bfc" id="L115" title="All 2 branches covered.">			if (ObjectUtils.isEmpty(user)) {</span>
+<span class="fc" id="L116">				history = weatherDataRepository.findByPostalCodeOrderByRequestTimestampDesc(</span>
+<span class="fc" id="L117">						finalPostalCode).stream()</span>
+<span class="fc" id="L118">						.map(this::mapToWeatherResponseDTO).toList();</span>
+			} else {
+<span class="fc" id="L120">				history = weatherDataRepository</span>
+<span class="fc" id="L121">						.findByPostalCodeAndUserIdOrderByRequestTimestampDesc(</span>
+<span class="fc" id="L122">								finalPostalCode, user.getId())</span>
+<span class="fc" id="L123">						.stream()</span>
+<span class="fc" id="L124">						.map(this::mapToWeatherResponseDTO).toList();</span>
+			}
+<span class="fc" id="L126">			return history;</span>
+<span class="fc" id="L127">		}).exceptionally(ex -&gt; {</span>
+			// Handle exception and return an empty list or a custom error message
+			// Log the exception for debugging purposes
+<span class="fc" id="L130">			log.error(&quot;Error occurred: &quot; + ex.getMessage());</span>
+			// Alternatively, you can throw a custom exception or return a default value
+<span class="fc" id="L132">			throw new WeatherServiceException(&quot;Failed to fetch weather history: &quot; + ex.getMessage(), ex);</span>
+		});
 	}
 
 	private WeatherResponseDTO mapToWeatherResponseDTO(WeatherData data) {
-<span class="fc" id="L108">		WeatherResponseDTO dto = new WeatherResponseDTO();</span>
-<span class="fc" id="L109">		dto.setPostalCode(data.getPostalCode());</span>
-<span class="fc" id="L110">		dto.setTemperature(data.getTemperature());</span>
-<span class="fc" id="L111">		dto.setHumidity(data.getHumidity());</span>
-<span class="fc" id="L112">		dto.setWeatherCondition(data.getWeatherCondition());</span>
-<span class="fc" id="L113">		dto.setTimestamp(data.getRequestTimestamp());</span>
-<span class="fc" id="L114">		dto.setUsername(data.getUser().getUsername());</span>
-<span class="fc" id="L115">		return dto;</span>
+<span class="fc" id="L137">		WeatherResponseDTO dto = new WeatherResponseDTO();</span>
+<span class="fc" id="L138">		dto.setPostalCode(data.getPostalCode());</span>
+<span class="fc" id="L139">		dto.setTemperature(data.getTemperature());</span>
+<span class="fc" id="L140">		dto.setHumidity(data.getHumidity());</span>
+<span class="fc" id="L141">		dto.setWeatherCondition(data.getWeatherCondition());</span>
+<span class="fc" id="L142">		dto.setTimestamp(data.getRequestTimestamp());</span>
+<span class="fc" id="L143">		dto.setUsername(data.getUser().getUsername());</span>
+<span class="fc" id="L144">		return dto;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

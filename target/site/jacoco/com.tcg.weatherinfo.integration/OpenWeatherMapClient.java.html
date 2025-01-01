@@ -59,7 +59,7 @@ public class OpenWeatherMapClient {
 
 			// Directly map the response to WeatherApiResponse
 <span class="fc" id="L61">			ResponseEntity&lt;WeatherApiResponse&gt; response = restTemplate.exchange(url, HttpMethod.GET, requestEntity,</span>
-<span class="fc" id="L62">					WeatherApiResponse.class);</span>
+					WeatherApiResponse.class);
 
 <span class="pc bpc" id="L64" title="1 of 4 branches missed.">			if (response == null || response.getBody() == null) {</span>
 <span class="fc" id="L65">				log.error(&quot;Received no response body for postal code: {}&quot;, postalCode);</span>

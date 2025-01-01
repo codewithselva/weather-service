@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
     @GetMapping
     public ResponseEntity&lt;Map&lt;String, String&gt;&gt; healthCheck() {
 <span class="fc" id="L23">        Map&lt;String, String&gt; status = Map.of(</span>
-<span class="fc" id="L24">            &quot;status&quot;, &quot;UP&quot;,</span>
+            &quot;status&quot;, &quot;UP&quot;,
 <span class="fc" id="L25">            &quot;timestamp&quot;, LocalDateTime.now().toString()</span>
         );
 <span class="fc" id="L27">        return ResponseEntity.ok(status);</span>

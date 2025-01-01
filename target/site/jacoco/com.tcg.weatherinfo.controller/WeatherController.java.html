@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WeatherController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">weather-service</a> &gt; <a href="index.source.html" class="el_package">com.tcg.weatherinfo.controller</a> &gt; <span class="el_source">WeatherController.java</span></div><h1>WeatherController.java</h1><pre class="source lang-java linenums">package com.tcg.weatherinfo.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -14,13 +15,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tcg.weatherinfo.dto.WeatherRequestDTO;
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
+import com.tcg.weatherinfo.exception.ErrorResponse;
 import com.tcg.weatherinfo.exception.InvalidPostalCodeException;
+import com.tcg.weatherinfo.exception.UserNotFoundException;
+import com.tcg.weatherinfo.exception.WeatherServiceException;
 import com.tcg.weatherinfo.service.WeatherService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -33,17 +36,39 @@ public class WeatherController {
 	@Operation(summary = &quot;Get current weather by postal code&quot;, description = &quot;Retrieves current weather data for a given US postal code&quot;)
 	@ApiResponse(responseCode = &quot;200&quot;, description = &quot;Weather data retrieved successfully&quot;)
 	@ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid postal code format&quot;)
+	@ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized access - Invalid API Key&quot;)
 	@ApiResponse(responseCode = &quot;403&quot;, description = &quot;User not active or unauthorized&quot;)
 	@PostMapping(&quot;/current&quot;)
-	public CompletableFuture&lt;ResponseEntity&lt;WeatherResponseDTO&gt;&gt; getCurrentWeather(
-			@Valid @RequestBody WeatherRequestDTO request) {
-<span class="fc" id="L40">		return weatherService.getWeatherData(request.getPostalCode(), request.getUsername())</span>
-<span class="fc" id="L41">				.thenApply(ResponseEntity::ok).exceptionally(throwable -&gt; {</span>
-<span class="nc" id="L42">					Throwable cause = throwable.getCause();</span>
-<span class="nc bnc" id="L43" title="All 2 branches missed.">					if (cause instanceof InvalidPostalCodeException) {</span>
-<span class="nc" id="L44">						return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();</span>
+	public CompletableFuture&lt;ResponseEntity&lt;?&gt;&gt; getWeatherData(@RequestBody WeatherRequestDTO requestDTO) {
+<span class="fc" id="L43">		return weatherService.getWeatherData(</span>
+<span class="fc" id="L44">				requestDTO.getPostalCode(), requestDTO.getUsername())</span>
+<span class="fc" id="L45">				.&lt;ResponseEntity&lt;?&gt;&gt;thenApply(ResponseEntity::ok)</span>
+<span class="fc" id="L46">				.exceptionally(ex -&gt; {</span>
+<span class="nc" id="L47">					Throwable cause = ex.getCause();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">					if (cause instanceof InvalidPostalCodeException) {</span>
+<span class="nc" id="L49">						return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(</span>
+<span class="nc" id="L50">								new ErrorResponse(HttpStatus.BAD_REQUEST.value(), &quot;Invalid Postal Code&quot;,</span>
+<span class="nc" id="L51">										cause.getMessage(), LocalDateTime.now()));</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">					} else if (cause instanceof UserNotFoundException) {</span>
+<span class="nc" id="L53">						return ResponseEntity.status(HttpStatus.NOT_FOUND).body(</span>
+<span class="nc" id="L54">								new ErrorResponse(HttpStatus.NOT_FOUND.value(), &quot;User Not Found&quot;, cause.getMessage(),</span>
+<span class="nc" id="L55">										LocalDateTime.now()));</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">					} else if (cause instanceof WeatherServiceException</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">							&amp;&amp; &quot;User account is not active&quot;.equals(cause.getMessage())) {</span>
+<span class="nc" id="L58">						return ResponseEntity.status(HttpStatus.FORBIDDEN).body(</span>
+<span class="nc" id="L59">								new ErrorResponse(HttpStatus.FORBIDDEN.value(), &quot;User Not Active&quot;, cause.getMessage(),</span>
+<span class="nc" id="L60">										LocalDateTime.now()));</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">					} else if (cause instanceof WeatherServiceException</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">							&amp;&amp; &quot;Invalid API key&quot;.equals(cause.getMessage())) {</span>
+<span class="nc" id="L63">						return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L64">								.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(),</span>
+<span class="nc" id="L65">										&quot;Unauthorized Access - Invalid API Key&quot;, cause.getMessage(),</span>
+<span class="nc" id="L66">										LocalDateTime.now()));</span>
+					} else {
+<span class="nc" id="L68">						return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(</span>
+<span class="nc" id="L69">								new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), &quot;Internal Server Error&quot;,</span>
+<span class="nc" id="L70">										&quot;An unexpected error occurred&quot;, LocalDateTime.now()));</span>
 					}
-<span class="nc" id="L46">					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
 				});
 	}
 
@@ -51,7 +76,7 @@ public class WeatherController {
 	@GetMapping(&quot;/history&quot;)
 	public CompletableFuture&lt;ResponseEntity&lt;List&lt;WeatherResponseDTO&gt;&gt;&gt; getWeatherHistory(
 			@RequestParam String postalCode, @RequestParam String username) {
-<span class="fc" id="L54">		return weatherService.getWeatherHistory(postalCode, username).thenApply(ResponseEntity::ok);</span>
+<span class="fc" id="L79">		return weatherService.getWeatherHistory(postalCode, username).thenApply(ResponseEntity::ok);</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
