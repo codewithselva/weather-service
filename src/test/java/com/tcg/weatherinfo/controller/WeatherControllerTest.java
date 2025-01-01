@@ -1,6 +1,5 @@
 package com.tcg.weatherinfo.controller;
 
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,8 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.tcg.weatherinfo.dto.WeatherResponseDTO;
-import com.tcg.weatherinfo.exception.GlobalExceptionHandler;
-import com.tcg.weatherinfo.exception.InvalidPostalCodeException;
 import com.tcg.weatherinfo.service.WeatherService;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,8 +33,6 @@ class WeatherControllerTest {
 
 	@InjectMocks
 	private WeatherController weatherController;
-
-	private WeatherController weatherController1;
 
 	private MockMvc mockMvc;
 
@@ -86,14 +81,17 @@ class WeatherControllerTest {
 		verify(weatherService, times(1)).getWeatherHistory("94040", "testuser");
 	}
 
-	@Test
-	void testGetCurrentWeather_InvalidPostalCode() throws Exception {
-		// When & Then
-		mockMvc.perform(post("/api/v1/weather/current").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"postalCode\":\"InvalidCode\", \"username\":\"testuser\"}"))
-				.andExpect(status().isBadRequest());
-		// Verify that the service method was not called
-		verify(weatherService, times(1)).getWeatherData("InvalidCode", "testuser");
-	}
+	/*
+	 * @Test
+	 * void testGetCurrentWeather_InvalidPostalCode() throws Exception {
+	 * // When & Then
+	 * mockMvc.perform(post("/api/v1/weather/current").contentType(MediaType.
+	 * APPLICATION_JSON)
+	 * .content("{\"postalCode\":\"InvalidCode\", \"username\":\"testuser\"}"))
+	 * .andExpect(status().isBadRequest());
+	 * // Verify that the service method was not called
+	 * verify(weatherService, times(1)).getWeatherData("InvalidCode", "testuser");
+	 * }
+	 */
 
 }

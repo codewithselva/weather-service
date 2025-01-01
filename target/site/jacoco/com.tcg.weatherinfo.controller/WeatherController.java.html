@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WeatherController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">weather-service</a> &gt; <a href="index.source.html" class="el_package">com.tcg.weatherinfo.controller</a> &gt; <span class="el_source">WeatherController.java</span></div><h1>WeatherController.java</h1><pre class="source lang-java linenums">package com.tcg.weatherinfo.controller;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.tcg.weatherinfo.dto.WeatherRequestDTO;
+import com.tcg.weatherinfo.dto.WeatherResponseDTO;
+import com.tcg.weatherinfo.exception.InvalidPostalCodeException;
+import com.tcg.weatherinfo.service.WeatherService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping(&quot;/api/v1/weather&quot;)
+@RequiredArgsConstructor
+@Tag(name = &quot;Weather API&quot;, description = &quot;Endpoints for weather data operations&quot;)
+public class WeatherController {
+	private final WeatherService weatherService;
+
+	@Operation(summary = &quot;Get current weather by postal code&quot;, description = &quot;Retrieves current weather data for a given US postal code&quot;)
+	@ApiResponse(responseCode = &quot;200&quot;, description = &quot;Weather data retrieved successfully&quot;)
+	@ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid postal code format&quot;)
+	@ApiResponse(responseCode = &quot;403&quot;, description = &quot;User not active or unauthorized&quot;)
+	@PostMapping(&quot;/current&quot;)
+	public CompletableFuture&lt;ResponseEntity&lt;WeatherResponseDTO&gt;&gt; getCurrentWeather(
+			@Valid @RequestBody WeatherRequestDTO request) {
+<span class="fc" id="L40">		return weatherService.getWeatherData(request.getPostalCode(), request.getUsername())</span>
+<span class="fc" id="L41">				.thenApply(ResponseEntity::ok).exceptionally(throwable -&gt; {</span>
+<span class="nc" id="L42">					Throwable cause = throwable.getCause();</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">					if (cause instanceof InvalidPostalCodeException) {</span>
+<span class="nc" id="L44">						return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();</span>
+					}
+<span class="nc" id="L46">					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+				});
+	}
+
+	@Operation(summary = &quot;Get weather history&quot;, description = &quot;Retrieves weather history for a given postal code&quot;)
+	@GetMapping(&quot;/history&quot;)
+	public CompletableFuture&lt;ResponseEntity&lt;List&lt;WeatherResponseDTO&gt;&gt;&gt; getWeatherHistory(
+			@RequestParam String postalCode, @RequestParam String username) {
+<span class="fc" id="L54">		return weatherService.getWeatherHistory(postalCode, username).thenApply(ResponseEntity::ok);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

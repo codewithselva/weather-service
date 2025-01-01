@@ -4,7 +4,7 @@
 This project is a weather service application built using Spring Boot. It provides weather information for given postal codes and integrates various functionalities such as database operations, validation, retry mechanism, and Swagger/OpenAPI documentation. This will involve making API requests to a weather data provider.
 
 ## Prerequisites
-- Java 21
+- Java 17
 - Maven 3.x
 
 ## Features
@@ -76,6 +76,6 @@ Feel free to submit pull requests or open issues to improve the project.
 ## License
 This project is licensed under the MIT License.
 
-![Java](https://img.shields.io/badge/java-%3E%3D21-blue)
+![Java](https://img.shields.io/badge/java-%3E%3D17-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
