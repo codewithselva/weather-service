@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">weather-service</a> &gt; <a href="index.source.html" class="el_package">com.tcg.weatherinfo.service</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package com.tcg.weatherinfo.service;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tcg.weatherinfo.dto.UserDTO;
+import com.tcg.weatherinfo.entity.User;
+import com.tcg.weatherinfo.exception.UserNotFoundException;
+import com.tcg.weatherinfo.exception.WeatherServiceException;
+import com.tcg.weatherinfo.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+<span class="fc" id="L18">@Slf4j</span>
+@RequiredArgsConstructor
+public class UserService {
+	
+	private final UserRepository userRepository;
+
+	@Transactional
+	public User createUser(UserDTO userDTO) {
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">		if (userRepository.existsByUsername(userDTO.getUsername())) {</span>
+<span class="nc" id="L27">			throw new WeatherServiceException(&quot;Username already exists&quot;);</span>
+		}
+
+<span class="fc" id="L30">		User user = User.builder().username(userDTO.getUsername())</span>
+<span class="fc" id="L31">				.password(userDTO.getPassword()).active(userDTO.isActive()).build();</span>
+
+<span class="fc" id="L33">		return userRepository.save(user);</span>
+	}
+
+	@Transactional
+	public void toggleUserStatus(Long userId, boolean active) {
+<span class="fc" id="L38">		userRepository.findById(userId)</span>
+<span class="pc" id="L39">				.orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found with id: &quot; + userId));</span>
+
+<span class="fc" id="L41">		userRepository.updateUserActiveStatus(userId, active);</span>
+<span class="fc" id="L42">		log.info(&quot;Updated user {} status to {}&quot;, userId, active);</span>
+<span class="fc" id="L43">	}</span>
+
+	public User getUserByUsername(String username) {
+<span class="fc" id="L46">		return userRepository.findByUsername(username)</span>
+<span class="fc" id="L47">				.orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found: &quot; + username));</span>
+	}
+
+	public Page&lt;User&gt; getAllUsers(Pageable pageable) {
+<span class="nc" id="L51">		return userRepository.findAll(pageable);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

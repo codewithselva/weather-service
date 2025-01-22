@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">weather-service</a> &gt; <a href="index.source.html" class="el_package">com.tcg.weatherinfo.controller</a> &gt; <span class="el_source">UserController.java</span></div><h1>UserController.java</h1><pre class="source lang-java linenums">package com.tcg.weatherinfo.controller;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.tcg.weatherinfo.dto.UserDTO;
+import com.tcg.weatherinfo.entity.User;
+import com.tcg.weatherinfo.service.UserService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping(&quot;/api/v1/users&quot;)
+@RequiredArgsConstructor
+@Tag(name = &quot;User API&quot;, description = &quot;Endpoints for user management&quot;)
+public class UserController {
+	
+	private final UserService userService;
+
+	@Operation(summary = &quot;Create new user&quot;, description = &quot;Creates a new user account&quot;)
+	@ApiResponse(responseCode = &quot;201&quot;, description = &quot;User created successfully&quot;)
+	@ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid user data&quot;)
+	@PostMapping
+	public ResponseEntity&lt;User&gt; createUser(@Valid @RequestBody UserDTO userDTO) {
+<span class="fc" id="L39">		User user = userService.createUser(userDTO);</span>
+<span class="fc" id="L40">		return new ResponseEntity&lt;&gt;(user, HttpStatus.CREATED);</span>
+	}
+
+	@Operation(summary = &quot;Toggle user status&quot;, description = &quot;Activates or deactivates a user account&quot;)
+	@PatchMapping(&quot;/{userId}/status&quot;)
+	public ResponseEntity&lt;Void&gt; toggleUserStatus(@PathVariable Long userId, @RequestParam boolean active) {
+<span class="fc" id="L46">		userService.toggleUserStatus(userId, active);</span>
+<span class="fc" id="L47">		return ResponseEntity.ok().build();</span>
+	}
+
+	@Operation(summary = &quot;Get all users&quot;, description = &quot;Retrieves all users with pagination&quot;)
+	@GetMapping
+	public ResponseEntity&lt;Page&lt;User&gt;&gt; getAllUsers(Pageable pageable) {
+<span class="fc" id="L53">		return ResponseEntity.ok(userService.getAllUsers(pageable));</span>
+	}
+
+	@Operation(summary = &quot;Get user by username&quot;, description = &quot;Retrieves user details by username&quot;)
+	@GetMapping(&quot;/{username}&quot;)
+	public ResponseEntity&lt;User&gt; getUserByUsername(@PathVariable String username) {
+<span class="fc" id="L59">		return ResponseEntity.ok(userService.getUserByUsername(username));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

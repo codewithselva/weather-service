@@ -31,7 +31,6 @@ public class GlobalExceptionHandler {
 		return new ErrorResponse(HttpStatus.NOT_FOUND.value(), "User Not Found", ex.getMessage(), LocalDateTime.now());
 	}
 
-
 	@ExceptionHandler(InvalidPostalCodeException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ErrorResponse handleInvalidPostalCodeException(InvalidPostalCodeException ex) {
@@ -62,6 +61,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(CompletionException.class)
 	public ResponseEntity<String> handleCompletionException(CompletionException ex) {
+		System.out.println("EXCEPTION ==>>>> " + ex.getCause());
 		if (ex.getCause() instanceof InvalidPostalCodeException) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getCause().getMessage());
 		}
