@@ -12,7 +12,7 @@ public class WeatherApiConfig {
 
 	@Bean
 	RestTemplate weatherApiRestTemplate(RestTemplateBuilder builder, WeatherApiProperties properties) {
-		return builder.connectTimeout(Duration.ofMillis(properties.getConnectTimeout()))
-				.readTimeout(Duration.ofMillis(properties.getReadTimeout())).build();
+		return builder.setConnectTimeout(Duration.ofMillis(properties.getConnectTimeout()))
+				.setReadTimeout(Duration.ofMillis(properties.getReadTimeout())).build();
 	}
 }

@@ -1,6 +1,5 @@
 package com.tcg.weatherinfo.controller;
 
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,13 +36,12 @@ class WeatherControllerTest {
 	@InjectMocks
 	private WeatherController weatherController;
 
-	private WeatherController weatherController1;
 
 	private MockMvc mockMvc;
 
 	@BeforeEach
 	void setUp() {
-		mockMvc = MockMvcBuilders.standaloneSetup(weatherController).build();
+		mockMvc = MockMvcBuilders.standaloneSetup(weatherController).setControllerAdvice(new GlobalExceptionHandler()).build();
 	}
 
 	@AfterEach
@@ -89,6 +87,8 @@ class WeatherControllerTest {
 	@Test
 	void testGetCurrentWeather_InvalidPostalCode() throws Exception {
 		// When & Then
+		when(weatherService.getWeatherData("InvalidCode", "testuser"))
+        .thenThrow(new InvalidPostalCodeException("Invalid postal code"));
 		mockMvc.perform(post("/api/v1/weather/current").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"postalCode\":\"InvalidCode\", \"username\":\"testuser\"}"))
 				.andExpect(status().isBadRequest());
