@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.tcg.weatherinfo.service.WeatherServiceTest
 -------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.231 s -- in com.tcg.weatherinfo.service.WeatherServiceTest
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.212 s -- in com.tcg.weatherinfo.service.WeatherServiceTest

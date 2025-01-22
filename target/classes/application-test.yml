@@ -28,7 +28,7 @@ logging:
 
 weather:
   api:
-    key: <<YOUR-API-KEY>>
+    key: b3de109dfca2fabd39801c5170a75703
     baseUrl: https://api.openweathermap.org/data/2.5/weather
     connectTimeout: 3000
     readTimeout: 3000

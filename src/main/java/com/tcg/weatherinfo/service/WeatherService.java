@@ -100,6 +100,7 @@ public class WeatherService {
 		});
 	}
 
+	@Transactional(readOnly = true)
 	public CompletableFuture<List<WeatherResponseDTO>> getWeatherHistory(String postalCode, String username) {
 		final String finalPostalCode = postalCode.replaceAll("^\"|\"$", "");
 		return CompletableFuture.supplyAsync(() -> {
